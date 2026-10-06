@@ -1,0 +1,6 @@
+report.pdf
+output.zip
+
+.direnv/
+shell.nix
+.envrc
