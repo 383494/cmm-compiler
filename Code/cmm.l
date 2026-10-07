@@ -35,7 +35,6 @@ static char *token_text(void) {
 WhiteSpace      [ \t\n\r]+
 LineComment     \/\/[^\n]*
 Identifier      [a-zA-Z_][a-zA-Z0-9_]*
-Binary          0[bB][01]+
 Decimal         [1-9][0-9]*
 Octal           0[0-7]*
 Hexadecimal     0[xX][0-9a-fA-F]+
@@ -93,7 +92,6 @@ IllegalHex      0[xX][0-9a-fA-F]*[g-zG-Z][0-9a-zA-Z]*
 
 {Identifier}        { yylval.str_val = token_text(); return ID; }
 {Real}              { yylval.float_val = strtof(yytext, NULL); return FLOAT; }
-{Binary}            { yylval.int_val = (int)strtol(yytext + 2, NULL, 2); return INT; }
 {Decimal}           { yylval.int_val = (int)strtol(yytext, NULL, 10); return INT; }
 {Octal}             { yylval.int_val = (int)strtol(yytext, NULL, 8); return INT; }
 {Hexadecimal}       { yylval.int_val = (int)strtol(yytext, NULL, 16); return INT; }

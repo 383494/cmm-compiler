@@ -82,7 +82,7 @@ check_pass tests/pass2.cmm
 check_pass tests/pass4.cmm
 check_ast_contains tests/pass4.cmm CompSt StructSpecifier FunDec WHILE IF ELSE RETURN LB DOT NOT AND RELOP VarList ParamDec Args
 check_ast_contains tests/pass5.cmm CompSt StructSpecifier FunDec WHILE IF ELSE RETURN LB DOT NOT MINUS RELOP OR Args
-if [ "${FEATURE_ENABLE_COMMENTS:-1}" = 1 ]; then
+if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
     check_pass tests/pass3.cmm
 else
     check_errors tests/pass3.cmm 'B@3'
@@ -93,7 +93,7 @@ check_errors tests/fail0.cmm 'A@4'
 check_message tests/fail0.cmm '^Error type A at Line 4: Mysterious character "~"\.$'
 check_errors tests/fail1.cmm 'B@5 B@6'
 check_errors tests/fail2.cmm 'A@3 A@4 B@7'
-if [ "${FEATURE_ENABLE_COMMENTS:-1}" = 1 ]; then
+if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
     # The comment opened on line 3 closes at line 7, so only the stray '*/'
     # on line 8 is a defect.
     check_errors tests/fail3.cmm 'B@8'
@@ -156,7 +156,7 @@ check_errors tests/recovery/mixed-errors.cmm 'B@3 B@4'
 check_errors tests/recovery/lexical-boundary.cmm 'B@3 A@4'
 check_message tests/recovery/lexical-boundary.cmm '^Error type A at Line 4: Mysterious character "@"\.$'
 
-if [ "${FEATURE_ENABLE_COMMENTS:-1}" = 1 ]; then
+if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
     check_errors tests/recovery/unterminated-comment.cmm 'A@3'
     check_message tests/recovery/unterminated-comment.cmm '^Error type A at Line 3: Unterminated comment\.$'
 else
