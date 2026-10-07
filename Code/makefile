@@ -9,11 +9,9 @@ include features.mk
 FEATURE_VARS := $(filter FEATURE_%,$(.VARIABLES))
 FEATURE_DEFS := $(foreach v,$(FEATURE_VARS),-DCMM_$(patsubst FEATURE_%,%,$(v))=$($(v)))
 override CPPFLAGS += $(FEATURE_DEFS)
-ifneq ($(filter $(FEATURE_ENABLE_COMMENTS),0 1),$(FEATURE_ENABLE_COMMENTS))
-$(error FEATURE_ENABLE_COMMENTS must be 0 or 1)
-endif
 
 BUILD         := build
+FEATURE_CONFIG := $(BUILD)/.feature-config
 TARGET        := $(BUILD)/libcmm.a
 PARSER        := parser
 GRAMMAR_SOURCE := $(firstword $(shell find . -type f -name '*.y' -not -path './$(BUILD)/*'))
@@ -35,12 +33,22 @@ ALL_OBJECTS    := $(sort $(GRAMMAR_OBJECT) $(LEXER_OBJECT) $(SOURCE_OBJECTS))
 DEPFILES       := $(ALL_OBJECTS:.o=.d)
 
 all: parser
+test: $(PARSER)
+	FEATURE_ENABLE_COMMENTS=$(FEATURE_ENABLE_COMMENTS) sh tests/run.sh ./$(PARSER)
+
 
 
 $(BUILD):
 	mkdir -p $@
 
-$(ALL_OBJECTS): features.mk
+.PHONY: FORCE
+FORCE:
+
+$(FEATURE_CONFIG): FORCE | $(BUILD)
+	@printf '%s\n' '$(FEATURE_DEFS)' > $@.tmp
+	@if ! cmp -s $@.tmp $@; then mv $@.tmp $@; else $(RM) $@.tmp; fi
+
+$(ALL_OBJECTS): features.mk $(FEATURE_CONFIG)
 
 $(PARSER): $(MAIN_OBJECT) $(TARGET)
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^
@@ -75,5 +83,5 @@ clean:
 -include $(DEPFILES)
 
 .DELETE_ON_ERROR:
-.PHONY: all clean
+.PHONY: all clean test
 

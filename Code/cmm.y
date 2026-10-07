@@ -12,6 +12,9 @@ int yylex(void);
 void yyerror(BaseAST **ast, char const *err_info);
 
 unsigned int cmm_error_count = 0;
+int cmm_lex_recovering = 0;
+
+#define yylex() (cmm_lex_recovering = YYRECOVERING(), (yylex)())
 
 static BaseAST *plain_node(const char *type, int lineno, size_t count, ...) {
     PlainAST *node = NEW(PlainAST);
@@ -83,6 +86,30 @@ static void plain_free(BaseAST *base) {
 %code provides {
 void yyerror(BaseAST **ast, char const *err_info);
 extern unsigned int cmm_error_count;
+extern int cmm_lex_recovering;
+}
+
+%code {
+// to report multiple bugs
+static int statement_boundary(int token) {
+    switch (token) {
+    case ID: 
+    case INT:
+    case FLOAT:
+    case LP:
+    case MINUS:
+    case NOT:
+    case LC:
+    case RETURN:
+    case IF:
+    case WHILE:
+    case RC:
+    case ELSE:
+        return 1;
+    default:
+        return 0;
+    }
+}
 }
 
 %parse-param { BaseAST **ast }
@@ -144,6 +171,20 @@ ExtDef:
     Specifier ExtDecList SEMI {
         $$ = plain_node("ExtDef", @$.first_line, 3,
             $1, $2, plain_token("SEMI", "", @3.first_line));
+    }
+    | Specifier ExtDecList error {
+        plain_free($1);
+        plain_free($2);
+        if (yychar == TYPE || yychar == STRUCT) {
+            yyerrok;
+        }
+        $$ = NULL;
+    }
+    | Specifier ExtDecList error SEMI {
+        plain_free($1);
+        plain_free($2);
+        yyerrok;
+        $$ = NULL;
     }
     | Specifier SEMI {
         $$ = plain_node("ExtDef", @$.first_line, 2,
@@ -270,6 +311,18 @@ Stmt:
         $$ = plain_node("Stmt", @$.first_line, 2,
             $1, plain_token("SEMI", "", @2.first_line));
     }
+    | Exp error {
+        plain_free($1);
+        if (statement_boundary(yychar)) {
+            yyerrok;
+        }
+        $$ = NULL;
+    }
+    | Exp error SEMI {
+        plain_free($1);
+        yyerrok;
+        $$ = NULL;
+    }
     | CompSt {
         $$ = plain_node("Stmt", @$.first_line, 1, $1);
     }
@@ -277,6 +330,28 @@ Stmt:
         $$ = plain_node("Stmt", @$.first_line, 3,
             plain_token("RETURN", "", @1.first_line), $2,
             plain_token("SEMI", "", @3.first_line));
+    }
+    | RETURN Exp error {
+        plain_free($2);
+        if (statement_boundary(yychar)) {
+            yyerrok;
+        }
+        $$ = NULL;
+    }
+    | RETURN Exp error SEMI {
+        plain_free($2);
+        yyerrok;
+        $$ = NULL;
+    }
+    | RETURN error {
+        if (statement_boundary(yychar)) {
+            yyerrok;
+        }
+        $$ = NULL;
+    }
+    | RETURN error SEMI {
+        yyerrok;
+        $$ = NULL;
     }
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE {
         $$ = plain_node("Stmt", @$.first_line, 5,
@@ -314,9 +389,30 @@ Def:
         $$ = plain_node("Def", @$.first_line, 3,
             $1, $2, plain_token("SEMI", "", @3.first_line));
     }
+    | Specifier DecList error {
+        plain_free($1);
+        plain_free($2);
+        if (yychar == TYPE || yychar == STRUCT || statement_boundary(yychar)) {
+            yyerrok;
+        }
+        $$ = NULL;
+    }
+    | Specifier DecList error SEMI {
+        plain_free($1);
+        plain_free($2);
+        yyerrok;
+        $$ = NULL;
+    }
     | Specifier error SEMI {
         plain_free($1);
         yyerrok;
+        $$ = NULL;
+    }
+    | Specifier error {
+        plain_free($1);
+        if (yychar == TYPE || yychar == STRUCT || statement_boundary(yychar)) {
+            yyerrok;
+        }
         $$ = NULL;
     }
     ;
@@ -437,6 +533,9 @@ Args:
 
 void yyerror(BaseAST **ast, char const *err_info) {
     (void)ast;
+    if (yychar == INVALID && strcmp(err_info, YY_("syntax error")) == 0) {
+        return;
+    }
     fprintf(ERR_STREAM, "Error type B at Line %d: %s\n", yylloc.first_line, err_info);
     cmm_error_count++;
 }

@@ -1,0 +1,30 @@
+struct Pair {
+  int left, right;
+};
+
+int sum(int values[4], int count) {
+  int i, total;
+  i = 0;
+  total = 0;
+  while (i < count && i < 4) {
+    total = total + values[i];
+    i = i + 1;
+  }
+  return total;
+}
+
+int main() {
+  struct Pair pair;
+  int values[4];
+  pair.left = 2;
+  pair.right = 3;
+  values[0] = pair.left;
+  values[1] = pair.right;
+  values[2] = -1;
+  values[3] = 4;
+  if (! (pair.left == 0 || pair.right < 0))
+    pair.left = sum(values, 4);
+  else
+    pair.left = 0;
+  return pair.left;
+}

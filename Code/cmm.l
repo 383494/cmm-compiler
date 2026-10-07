@@ -22,14 +22,13 @@
 
 static int comment_line;
 
-/* cmm.y takes ownership of textual token values. */
 static char *token_text(void) {
     char *text = malloc((size_t)yyleng + 1);
     if (text == NULL) {
         abort();
     }
     memcpy(text, yytext, (size_t)yyleng + 1);
-    return text;
+    return text; // free'd by caller
 }
 %}
 
@@ -52,8 +51,10 @@ Real            (0|[1-9][0-9]*)\.([0-9]+)
 <COMMENT>"*"        { }
 <COMMENT>\n         { }
 <COMMENT><<EOF>>    {
-    cmm_error_count++;
-    fprintf(ERR_STREAM, "Error type A at Line %d: Unterminated comment.\n", comment_line);
+    if (!cmm_lex_recovering) {
+        cmm_error_count++;
+        fprintf(ERR_STREAM, "Error type A at Line %d: Unterminated comment.\n", comment_line);
+    }
     BEGIN(COMMENTS_ENABLED);
     return INVALID;
 }
@@ -95,8 +96,11 @@ Real            (0|[1-9][0-9]*)\.([0-9]+)
 {Hexadecimal}       { yylval.int_val = (int)strtol(yytext, NULL, 16); return INT; }
 
 .                   {
-    fprintf(ERR_STREAM, "Error type A at Line %d: Mysterious character \"%s\".\n", yylineno, yytext);
-    cmm_error_count++;
+    if (!cmm_lex_recovering) {
+        // prevent duplicate
+        fprintf(ERR_STREAM, "Error type A at Line %d: Mysterious character \"%s\".\n", yylineno, yytext);
+        cmm_error_count++;
+    }
     return INVALID;
 }
 

@@ -2,7 +2,7 @@
 #include "../utils/list.h"
 #include "../utils/macros.h"
 
-#define MAX_ID_LEN 32
+#define MAX_ID_LEN 33
 
 typedef struct {
 	// virtual functions here
