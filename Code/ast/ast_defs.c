@@ -4,7 +4,10 @@ BaseAST* BaseAST_init(void* buf) {
 	return (BaseAST*)buf;
 }
 
-#define CREATE_DEFUALT_INIT(parent, name) \
-	name* name##_init(void* buf) {        \
-		return (name*)buf;                \
+#define CREATE_DEFAULT_INIT(parent, name, ...) \
+	name* name##_init(void* buf) {             \
+		parent##_init(buf);                    \
+		return (name*)buf;                     \
 	}
+
+APPLY(CREATE_DEFAULT_INIT, ASTs)

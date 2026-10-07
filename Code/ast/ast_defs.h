@@ -6,6 +6,7 @@
 
 typedef struct {
 	// virtual functions here
+	int delete_me_later;   // make compiler happy
 } BaseAST;
 
 #define DEF_AST(parent, name, ...) \
@@ -25,8 +26,8 @@ typedef struct {
 	_(BaseAST, Program, ExtDefList* decls;)                       \
 	_(BaseAST, ExtDefList, List* list;)
 
-APPLY(DECL_AST, ASTs);
-APPLY(DEF_AST, ASTs);
+APPLY(DECL_AST, ASTs)
+APPLY(DEF_AST, ASTs)
 
 // Args CompSt Dec Def Exp ExtDef FunDec OptTag ParamDec Specifier Stmt StructSpecifier Tag VarDec
 // DecList DefList ExtDecList ExtDefList StmtList VarList

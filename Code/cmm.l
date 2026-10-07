@@ -2,17 +2,40 @@
 %option nounput
 %option noinput
 %option yylineno
+%option never-interactive
+
+%s COMMENTS_ENABLED
+%x COMMENT
 
 %{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#define ERR_STREAM MUXDEF(CMM_OUTPUT_STDERR, stderr, stdout)
+
+#if CMM_ENABLE_COMMENTS
+#define YY_USER_INIT BEGIN(COMMENTS_ENABLED)
+#endif
+
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
+
+static int comment_line;
+
+/* cmm.y takes ownership of textual token values. */
+static char *token_text(void) {
+    char *text = malloc((size_t)yyleng + 1);
+    if (text == NULL) {
+        abort();
+    }
+    memcpy(text, yytext, (size_t)yyleng + 1);
+    return text;
+}
 %}
 
-WhiteSpace          [ \t\n\r]*
-LineComment         \/\/.*
-MultiLineComment    "/*"([^*]|[*][^/]|[\r\n])*"*/"
-
+WhiteSpace      [ \t\n\r]+
+LineComment     \/\/[^\n]*
 Identifier      [a-zA-Z_][a-zA-Z0-9_]*
-
 Binary          0[bB][01]+
 Decimal         [1-9][0-9]*
 Octal           0[0-7]*
@@ -22,20 +45,64 @@ Real            (0|[1-9][0-9]*)\.([0-9]+)
 %%
 
 {WhiteSpace}        { }
-{LineComment}       { yyerror("not implemented"); }
-{MultiLineComment}  { yyerror("not implemented"); }
+<COMMENTS_ENABLED>{LineComment} { }
+<COMMENTS_ENABLED>"/*" { comment_line = yylineno; BEGIN(COMMENT); }
+<COMMENT>"*/"       { BEGIN(COMMENTS_ENABLED); }
+<COMMENT>[^*\n]+    { }
+<COMMENT>"*"        { }
+<COMMENT>\n         { }
+<COMMENT><<EOF>>    {
+    cmm_error_count++;
+    fprintf(ERR_STREAM, "Error type A at Line %d: Unterminated comment.\n", comment_line);
+    BEGIN(COMMENTS_ENABLED);
+    return INVALID;
+}
 
-// TODO
+"int"|"float"       { yylval.str_val = token_text(); return TYPE; }
+"struct"            { return STRUCT; }
+"return"            { return RETURN; }
+"if"                { return IF; }
+"else"              { return ELSE; }
+"while"             { return WHILE; }
 
+";"                 { return SEMI; }
+","                 { return COMMA; }
+"="                 { return ASSIGNOP; }
+"=="|"!="|">="|"<="|">"|"<" {
+    yylval.str_val = token_text();
+    return RELOP;
+}
+"+"                 { return PLUS; }
+"-"                 { return MINUS; }
+"*"                 { return STAR; }
+"/"                 { return DIV; }
+"&&"                { return AND; }
+"||"                { return OR; }
+"!"                 { return NOT; }
+"."                 { return DOT; }
+"("                 { return LP; }
+")"                 { return RP; }
+"["                 { return LB; }
+"]"                 { return RB; }
+"{"                 { return LC; }
+"}"                 { return RC; }
 
-{Identifier}    { yylval.str_val = strcpy(malloc(strlen(yytext) + 1), yytext); return IDENT; }
+{Identifier}        { yylval.str_val = token_text(); return ID; }
+{Real}              { yylval.float_val = strtof(yytext, NULL); return FLOAT; }
+{Binary}            { yylval.int_val = (int)strtol(yytext + 2, NULL, 2); return INT; }
+{Decimal}           { yylval.int_val = (int)strtol(yytext, NULL, 10); return INT; }
+{Octal}             { yylval.int_val = (int)strtol(yytext, NULL, 8); return INT; }
+{Hexadecimal}       { yylval.int_val = (int)strtol(yytext, NULL, 16); return INT; }
 
-{Binary}        { yylval.int_val = strtol(yytext + 2, nullptr, 2); return INT_CONST; }
-{Decimal}       { int x; sscanf(yytext, "%d", &x); yylval.int_val = x; return INT_CONST; }
-{Octal}         { int x; sscanf(yytext, "%d", &x); yylval.int_val = x; return INT_CONST; }
-{Hexadecimal}   { int x; sscanf(yytext, "%d", &x); yylval.int_val = x; return INT_CONST; }
-{Real}          { float x; sscanf(yytext, "%f", &x); yylval.float_val = x; return FLOAT_CONST; }
+.                   {
+    fprintf(ERR_STREAM, "Error type A at Line %d: Mysterious character \"%s\".\n", yylineno, yytext);
+    cmm_error_count++;
+    return INVALID;
+}
 
-.               { return yytext[0]; }
+<<EOF>>             {
+    yylloc.first_line = yylloc.last_line = yylineno;
+    return 0;
+}
 
 %%
