@@ -22,6 +22,14 @@
 
 static int comment_line;
 
+static void report_syntax_line(int line) {
+    if (cmm_last_error_line != line) {
+        fprintf(ERR_STREAM, "Error type B at Line %d: syntax error\n", line);
+        cmm_error_count++;
+        cmm_last_error_line = line;
+    }
+}
+
 static char *token_text(void) {
     char *text = malloc((size_t)yyleng + 1);
     if (text == NULL) {
@@ -45,18 +53,35 @@ IllegalHex      0[xX][0-9a-fA-F]*[g-zG-Z][0-9a-zA-Z]*
 %%
 
 {WhiteSpace}        { }
-<COMMENTS_ENABLED>{LineComment} { }
-<COMMENTS_ENABLED>"/*" { comment_line = yylineno; BEGIN(COMMENT); }
-<COMMENT>"*/"       { BEGIN(COMMENTS_ENABLED); }
+{LineComment}       {
+#if !CMM_ENABLE_COMMENTS
+    report_syntax_line(yylineno);
+#endif
+}
+"/*"                { comment_line = yylineno; BEGIN(COMMENT); }
+<COMMENT>"*/"       {
+#if !CMM_ENABLE_COMMENTS
+    for (int line = comment_line; line <= yylineno; ++line) {
+        report_syntax_line(line);
+    }
+#endif
+    BEGIN(COMMENTS_ENABLED);
+}
 <COMMENT>[^*\n]+    { }
 <COMMENT>"*"        { }
 <COMMENT>\n         { }
 <COMMENT><<EOF>>    {
+#if CMM_ENABLE_COMMENTS
     if (cmm_last_error_line != comment_line) {
         cmm_error_count++;
         fprintf(ERR_STREAM, "Error type A at Line %d: Unterminated comment.\n", comment_line);
         cmm_last_error_line = comment_line;
     }
+#else
+    for (int line = comment_line; line <= yylineno; ++line) {
+        report_syntax_line(line);
+    }
+#endif
     BEGIN(COMMENTS_ENABLED);
     return INVALID;
 }

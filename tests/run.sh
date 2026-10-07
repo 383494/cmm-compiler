@@ -85,7 +85,7 @@ check_ast_contains tests/pass5.cmm CompSt StructSpecifier FunDec WHILE IF ELSE R
 if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
     check_pass tests/pass3.cmm
 else
-    check_errors tests/pass3.cmm 'B@3'
+    check_errors tests/pass3.cmm 'B@3 B@4 B@5 B@6'
 fi
 
 # One diagnostic per independent defect.
@@ -98,7 +98,7 @@ if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
     # on line 8 is a defect.
     check_errors tests/fail3.cmm 'B@8'
 else
-    check_errors tests/fail3.cmm 'B@3'
+    check_errors tests/fail3.cmm 'B@3 B@4 B@5 B@6 B@7 B@8'
 fi
 check_errors tests/fail4.cmm 'B@3'
 check_errors tests/fail5.cmm 'B@3 B@4'
@@ -160,6 +160,6 @@ if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
     check_errors tests/recovery/unterminated-comment.cmm 'A@3'
     check_message tests/recovery/unterminated-comment.cmm '^Error type A at Line 3: Unterminated comment\.$'
 else
-    # Without comment support the '/*' is just arithmetic operators.
-    check_errors tests/recovery/unterminated-comment.cmm 'B@3'
+    # Without comment support each line of the comment is reported as an error.
+    check_errors tests/recovery/unterminated-comment.cmm 'B@3 B@4 B@5 B@6'
 fi
