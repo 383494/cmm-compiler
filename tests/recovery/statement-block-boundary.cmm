@@ -1,0 +1,7 @@
+int first() {
+  int value;
+  value =
+}
+int second() {
+  return ;
+}

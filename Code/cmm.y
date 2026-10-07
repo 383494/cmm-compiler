@@ -12,6 +12,7 @@ int yylex(void);
 void yyerror(BaseAST **ast, char const *err_info);
 
 unsigned int cmm_error_count = 0;
+int cmm_last_error_line = 0;
 
 static BaseAST *plain_node(const char *type, int lineno, size_t count, ...) {
     PlainAST *node = NEW(PlainAST);
@@ -83,28 +84,26 @@ static void plain_free(BaseAST *base) {
 %code provides {
 void yyerror(BaseAST **ast, char const *err_info);
 extern unsigned int cmm_error_count;
+extern int cmm_last_error_line;
 }
 
 %code {
-// to report multiple bugs
-static int statement_boundary(int token) {
+static int starts_statement(int token) {
     switch (token) {
-    case ID: 
-    case INT:
-    case FLOAT:
-    case LP:
-    case MINUS:
-    case NOT:
-    case LC:
-    case RETURN:
-    case IF:
-    case WHILE:
-    case RC:
-    case ELSE:
+    case ID: case INT: case FLOAT: case LP: case MINUS: case NOT:
+    case LC: case RETURN: case IF: case WHILE: case RC: case ELSE:
         return 1;
     default:
         return 0;
     }
+}
+
+static int starts_external(int token) {
+    return token == TYPE || token == STRUCT;
+}
+
+static int starts_declaration(int token) {
+    return token == TYPE || token == STRUCT || starts_statement(token);
 }
 }
 
@@ -171,7 +170,7 @@ ExtDef:
     | Specifier ExtDecList error {
         plain_free($1);
         plain_free($2);
-        if (yychar == TYPE || yychar == STRUCT) {
+        if (starts_external(yychar)) {
             yyerrok;
         }
         $$ = NULL;
@@ -226,6 +225,11 @@ StructSpecifier:
         $$ = plain_node("StructSpecifier", @$.first_line, 2,
             plain_token("STRUCT", "", @1.first_line), $2);
     }
+    | STRUCT OptTag LC error RC {
+        plain_free($2);
+        yyerrok;
+        $$ = NULL;
+    }
     ;
 
 OptTag:
@@ -254,6 +258,11 @@ VarDec:
             plain_int_token($3, @3.first_line),
             plain_token("RB", "", @4.first_line));
     }
+    | VarDec LB error RB {
+        plain_free($1);
+        yyerrok;
+        $$ = NULL;
+    }
     ;
 
 FunDec:
@@ -268,6 +277,11 @@ FunDec:
             plain_text_token("ID", $1, @1.first_line),
             plain_token("LP", "", @2.first_line),
             plain_token("RP", "", @3.first_line));
+    }
+    | ID LP error RP {
+        free($1);
+        yyerrok;
+        $$ = NULL;
     }
     ;
 
@@ -309,7 +323,7 @@ Stmt:
     }
     | Exp error {
         plain_free($1);
-        if (statement_boundary(yychar)) {
+        if (starts_statement(yychar)) {
             yyerrok;
         }
         $$ = NULL;
@@ -329,7 +343,7 @@ Stmt:
     }
     | RETURN Exp error {
         plain_free($2);
-        if (statement_boundary(yychar)) {
+        if (starts_statement(yychar)) {
             yyerrok;
         }
         $$ = NULL;
@@ -340,7 +354,7 @@ Stmt:
         $$ = NULL;
     }
     | RETURN error {
-        if (statement_boundary(yychar)) {
+        if (starts_statement(yychar)) {
             yyerrok;
         }
         $$ = NULL;
@@ -368,6 +382,22 @@ Stmt:
             plain_token("LP", "", @2.first_line), $3,
             plain_token("RP", "", @4.first_line), $5);
     }
+    | IF LP error RP Stmt %prec LOWER_THAN_ELSE {
+        plain_free($5);
+        yyerrok;
+        $$ = NULL;
+    }
+    | IF LP error RP Stmt ELSE Stmt {
+        plain_free($5);
+        plain_free($7);
+        yyerrok;
+        $$ = NULL;
+    }
+    | WHILE LP error RP Stmt {
+        plain_free($5);
+        yyerrok;
+        $$ = NULL;
+    }
     | error SEMI {
         yyerrok;
         $$ = NULL;
@@ -388,7 +418,7 @@ Def:
     | Specifier DecList error {
         plain_free($1);
         plain_free($2);
-        if (yychar == TYPE || yychar == STRUCT || statement_boundary(yychar)) {
+        if (starts_declaration(yychar)) {
             yyerrok;
         }
         $$ = NULL;
@@ -406,7 +436,7 @@ Def:
     }
     | Specifier error {
         plain_free($1);
-        if (yychar == TYPE || yychar == STRUCT || statement_boundary(yychar)) {
+        if (yychar == RC) {
             yyerrok;
         }
         $$ = NULL;
@@ -433,9 +463,14 @@ Dec:
     }
     | VarDec ASSIGNOP error {
         plain_free($1);
-        if (statement_boundary(yychar)) {
+        if (starts_statement(yychar)) {
             yyerrok;
         }
+        $$ = NULL;
+    }
+    | VarDec ASSIGNOP LC error RC {
+        plain_free($1);
+        yyerrok;
         $$ = NULL;
     }
     ;
@@ -498,10 +533,20 @@ Exp:
             plain_token("LP", "", @2.first_line),
             plain_token("RP", "", @3.first_line));
     }
+    | ID LP error RP {
+        free($1);
+        yyerrok;
+        $$ = NULL;
+    }
     | Exp LB Exp RB %prec LB {
         $$ = plain_node("Exp", @$.first_line, 4,
             $1, plain_token("LB", "", @2.first_line), $3,
             plain_token("RB", "", @4.first_line));
+    }
+    | Exp LB error RB %prec LB {
+        plain_free($1);
+        yyerrok;
+        $$ = NULL;
     }
     | Exp DOT ID {
         $$ = plain_node("Exp", @$.first_line, 3,
@@ -536,9 +581,13 @@ Args:
 
 void yyerror(BaseAST **ast, char const *err_info) {
     (void)ast;
+    if (cmm_last_error_line == yylloc.first_line) {
+        return;
+    }
     if (yychar == INVALID && strcmp(err_info, YY_("syntax error")) == 0) {
         return;
     }
     fprintf(ERR_STREAM, "Error type B at Line %d: %s\n", yylloc.first_line, err_info);
     cmm_error_count++;
+    cmm_last_error_line = yylloc.first_line;
 }

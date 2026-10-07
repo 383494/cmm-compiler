@@ -1,0 +1,16 @@
+struct Point {
+  int x;
+  int y;
+};
+
+struct Line {
+  struct Point start;
+  struct Point end;
+};
+
+int length() {
+  struct Line l;
+  l.start.x = 0;
+  l.end.x = ;
+  return 0;
+}

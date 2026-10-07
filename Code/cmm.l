@@ -51,8 +51,11 @@ Real            (0|[1-9][0-9]*)\.([0-9]+)
 <COMMENT>"*"        { }
 <COMMENT>\n         { }
 <COMMENT><<EOF>>    {
-    cmm_error_count++;
-    fprintf(ERR_STREAM, "Error type A at Line %d: Unterminated comment.\n", comment_line);
+    if (cmm_last_error_line != comment_line) {
+        cmm_error_count++;
+        fprintf(ERR_STREAM, "Error type A at Line %d: Unterminated comment.\n", comment_line);
+        cmm_last_error_line = comment_line;
+    }
     BEGIN(COMMENTS_ENABLED);
     return INVALID;
 }
@@ -94,8 +97,11 @@ Real            (0|[1-9][0-9]*)\.([0-9]+)
 {Hexadecimal}       { yylval.int_val = (int)strtol(yytext, NULL, 16); return INT; }
 
 .                   {
-    fprintf(ERR_STREAM, "Error type A at Line %d: Mysterious character \"%s\".\n", yylineno, yytext);
-    cmm_error_count++;
+    if (cmm_last_error_line != yylineno) {
+        fprintf(ERR_STREAM, "Error type A at Line %d: Mysterious character \"%s\".\n", yylineno, yytext);
+        cmm_error_count++;
+        cmm_last_error_line = yylineno;
+    }
     return INVALID;
 }
 

@@ -1,0 +1,14 @@
+int first(int n) {
+  int i = 0;
+  while (i < n) i = i + 1;
+  return i;
+}
+
+int broken(int n) {
+  int i = ;
+  return i;
+}
+
+int third(int n) {
+  return n + 1;
+}

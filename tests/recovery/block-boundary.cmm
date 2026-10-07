@@ -1,0 +1,6 @@
+int first() {
+  int value =
+}
+int second() {
+  return ;
+}
