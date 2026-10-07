@@ -323,9 +323,6 @@ Stmt:
     }
     | Exp error {
         plain_free($1);
-        if (starts_statement(yychar)) {
-            yyerrok;
-        }
         $$ = NULL;
     }
     | Exp error SEMI {
