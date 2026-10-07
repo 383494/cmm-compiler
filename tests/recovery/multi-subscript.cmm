@@ -1,0 +1,7 @@
+int main() {
+  int a[8];
+  int x;
+  x = a[1,2] +
+      a[3,4];
+  return 0;
+}

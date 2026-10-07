@@ -34,7 +34,7 @@ DEPFILES       := $(ALL_OBJECTS:.o=.d)
 
 all: parser
 test: $(PARSER)
-	FEATURE_ENABLE_COMMENTS=$(FEATURE_ENABLE_COMMENTS) sh tests/run.sh ./$(PARSER)
+	FEATURE_ENABLE_COMMENTS=$(FEATURE_ENABLE_COMMENTS) sh ../tests/run.sh ./$(PARSER)
 
 
 

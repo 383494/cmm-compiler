@@ -1,0 +1,4 @@
+int first
+int second;
+int third[];
+int main() { return 0; }

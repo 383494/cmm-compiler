@@ -1,0 +1,6 @@
+int main() {
+  int value;
+  value = 1 + * 2 / @;
+  value = @;
+  return value;
+}

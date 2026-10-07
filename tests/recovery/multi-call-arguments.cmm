@@ -1,0 +1,6 @@
+int main() {
+  int x;
+  x = f(1,) *
+      g(2,);
+  return 0;
+}

@@ -1,0 +1,7 @@
+int main() {
+  int total = 0;
+  float weights[4] = {0.25, 0.5, 1.0};
+  struct S s;
+  s.id = 1;
+  return total;
+}
