@@ -56,7 +56,7 @@ static BaseAST *plain_text_token(const char *type, char *data, int lineno) {
 
 static BaseAST *plain_int_token(int value, int lineno) {
     char data[MAX_ID_LEN];
-    snprintf(data, sizeof(data), "%d", value);
+    snprintf(data, sizeof(data), "%u", (unsigned)value);
     return plain_token("INT", data, lineno);
 }
 

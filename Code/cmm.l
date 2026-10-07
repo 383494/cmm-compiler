@@ -40,6 +40,8 @@ Decimal         [1-9][0-9]*
 Octal           0[0-7]*
 Hexadecimal     0[xX][0-9a-fA-F]+
 Real            (0|[1-9][0-9]*)\.([0-9]+)
+IllegalOctal    0[0-9]*[89][0-9]*
+IllegalHex      0[xX][0-9a-fA-F]*[g-zG-Z][0-9a-zA-Z]*
 
 %%
 
@@ -95,6 +97,22 @@ Real            (0|[1-9][0-9]*)\.([0-9]+)
 {Decimal}           { yylval.int_val = (int)strtol(yytext, NULL, 10); return INT; }
 {Octal}             { yylval.int_val = (int)strtol(yytext, NULL, 8); return INT; }
 {Hexadecimal}       { yylval.int_val = (int)strtol(yytext, NULL, 16); return INT; }
+{IllegalOctal}      {
+    if (cmm_last_error_line != yylineno) {
+        fprintf(ERR_STREAM, "Error type A at Line %d: Illegal octal number '%s'.\n", yylineno, yytext);
+        cmm_error_count++;
+        cmm_last_error_line = yylineno;
+    }
+    return INVALID;
+}
+{IllegalHex}        {
+    if (cmm_last_error_line != yylineno) {
+        fprintf(ERR_STREAM, "Error type A at Line %d: Illegal hexadecimal number '%s'.\n", yylineno, yytext);
+        cmm_error_count++;
+        cmm_last_error_line = yylineno;
+    }
+    return INVALID;
+}
 
 .                   {
     if (cmm_last_error_line != yylineno) {
