@@ -12,9 +12,6 @@ int yylex(void);
 void yyerror(BaseAST **ast, char const *err_info);
 
 unsigned int cmm_error_count = 0;
-int cmm_lex_recovering = 0;
-
-#define yylex() (cmm_lex_recovering = YYRECOVERING(), (yylex)())
 
 static BaseAST *plain_node(const char *type, int lineno, size_t count, ...) {
     PlainAST *node = NEW(PlainAST);
@@ -86,7 +83,6 @@ static void plain_free(BaseAST *base) {
 %code provides {
 void yyerror(BaseAST **ast, char const *err_info);
 extern unsigned int cmm_error_count;
-extern int cmm_lex_recovering;
 }
 
 %code {
@@ -434,6 +430,13 @@ Dec:
     | VarDec ASSIGNOP Exp {
         $$ = plain_node("Dec", @$.first_line, 3,
             $1, plain_token("ASSIGNOP", "", @2.first_line), $3);
+    }
+    | VarDec ASSIGNOP error {
+        plain_free($1);
+        if (statement_boundary(yychar)) {
+            yyerrok;
+        }
+        $$ = NULL;
     }
     ;
 
