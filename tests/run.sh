@@ -78,27 +78,83 @@ check_ast_contains() {
 
 check_pass tests/pass0.cmm
 check_pass tests/pass1.cmm
-check_pass tests/pass2.cmm
+if [ "${FEATURE_ENABLE_OCTAL:-1}" = 1 ] && [ "${FEATURE_ENABLE_HEXADECIMAL:-1}" = 1 ]; then
+    check_pass tests/pass2.cmm
+elif [ "${FEATURE_ENABLE_OCTAL:-1}" = 1 ]; then
+    check_errors tests/pass2.cmm 'B@4'
+else
+    # 0123 splits into two integers and recovery spills onto line 4.
+    check_errors tests/pass2.cmm 'B@3 B@4'
+fi
+if [ "${FEATURE_ENABLE_OCTAL:-1}" = 1 ]; then
+    check_pass tests/octal.cmm
+    check_ast_contains tests/octal.cmm 'INT: 83' 'INT: 511' 'INT: 4294967295'
+else
+    # Without octal literals '0123' is a 0 followed by a decimal 123.
+    check_errors tests/octal.cmm 'B@2 B@3 B@4'
+fi
+if [ "${FEATURE_ENABLE_HEXADECIMAL:-1}" = 1 ]; then
+    check_pass tests/hex.cmm
+    check_ast_contains tests/hex.cmm 'INT: 31' 'INT: 255' 'INT: 4294967295'
+else
+    # Without hexadecimal literals '0x1F' is a 0 followed by an identifier.
+    check_errors tests/hex.cmm 'B@2 B@3 B@4'
+fi
 check_pass tests/pass4.cmm
 check_ast_contains tests/pass4.cmm CompSt StructSpecifier FunDec WHILE IF ELSE RETURN LB DOT NOT AND RELOP VarList ParamDec Args
 check_ast_contains tests/pass5.cmm CompSt StructSpecifier FunDec WHILE IF ELSE RETURN LB DOT NOT MINUS RELOP OR Args
-if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
-    check_pass tests/pass3.cmm
+if [ "${FEATURE_ENABLE_BINARY:-1}" = 1 ]; then
+    check_pass tests/binary.cmm
+    check_ast_contains tests/binary.cmm 'INT: 5' 'INT: 255'
 else
-    check_errors tests/pass3.cmm 'B@3 B@4 B@5 B@6'
+    # Without binary literals '0b101' is an octal 0 followed by an identifier.
+    check_errors tests/binary.cmm 'B@2 B@3'
+fi
+if [ "${FEATURE_ENABLE_COMMENTS:-1}" = 1 ]; then
+    check_pass tests/pass3.cmm
+    check_pass tests/comments-inline.cmm
+else
+    # Without comment rules '//' and '/*' are ordinary operators, so the first
+    # comment line is one syntax error and recovery skips the rest.
+    check_errors tests/pass3.cmm 'B@3'
+    check_errors tests/comments-inline.cmm 'B@2'
 fi
 
 # One diagnostic per independent defect.
 check_errors tests/fail0.cmm 'A@4'
 check_message tests/fail0.cmm '^Error type A at Line 4: Mysterious character "~"\.$'
 check_errors tests/fail1.cmm 'B@5 B@6'
-check_errors tests/fail2.cmm 'A@3 A@4 B@7'
-if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
+if [ "${FEATURE_ENABLE_OCTAL:-1}" = 1 ] && [ "${FEATURE_ENABLE_HEXADECIMAL:-1}" = 1 ]; then
+    check_errors tests/fail2.cmm 'A@3 A@4 B@7'
+elif [ "${FEATURE_ENABLE_OCTAL:-1}" = 1 ]; then
+    check_errors tests/fail2.cmm 'A@3 B@4 B@7'
+else
+    # Without octal support 09 is split into two integers; recovery's syntax
+    # error on line 4 then preempts the illegal-hex diagnostic there (at most
+    # one diagnostic per line).
+    check_errors tests/fail2.cmm 'B@3 B@4 B@7'
+fi
+# Illegal numeric literals report the offending text once per line.
+if [ "${FEATURE_ENABLE_OCTAL:-1}" = 1 ]; then
+    check_errors tests/illegal-octal.cmm 'A@2'
+    check_message tests/illegal-octal.cmm "^Error type A at Line 2: Illegal octal number '09'\.$"
+else
+    check_errors tests/illegal-octal.cmm 'B@2'
+fi
+if [ "${FEATURE_ENABLE_HEXADECIMAL:-1}" = 1 ]; then
+    check_errors tests/illegal-hex.cmm 'A@2'
+    check_message tests/illegal-hex.cmm "^Error type A at Line 2: Illegal hexadecimal number '0xG1'\.$"
+else
+    check_errors tests/illegal-hex.cmm 'B@2'
+fi
+# Several syntax errors on one line collapse into one diagnostic.
+check_errors tests/recovery/same-line-errors.cmm 'B@2'
+if [ "${FEATURE_ENABLE_COMMENTS:-1}" = 1 ]; then
     # The comment opened on line 3 closes at line 7, so only the stray '*/'
     # on line 8 is a defect.
     check_errors tests/fail3.cmm 'B@8'
 else
-    check_errors tests/fail3.cmm 'B@3 B@4 B@5 B@6 B@7 B@8'
+    check_errors tests/fail3.cmm 'B@3'
 fi
 check_errors tests/fail4.cmm 'B@3'
 check_errors tests/fail5.cmm 'B@3 B@4'
@@ -156,10 +212,11 @@ check_errors tests/recovery/mixed-errors.cmm 'B@3 B@4'
 check_errors tests/recovery/lexical-boundary.cmm 'B@3 A@4'
 check_message tests/recovery/lexical-boundary.cmm '^Error type A at Line 4: Mysterious character "@"\.$'
 
-if [ "${FEATURE_ENABLE_COMMENTS:-0}" = 1 ]; then
+if [ "${FEATURE_ENABLE_COMMENTS:-1}" = 1 ]; then
     check_errors tests/recovery/unterminated-comment.cmm 'A@3'
     check_message tests/recovery/unterminated-comment.cmm '^Error type A at Line 3: Unterminated comment\.$'
 else
-    # Without comment support each line of the comment is reported as an error.
-    check_errors tests/recovery/unterminated-comment.cmm 'B@3 B@4 B@5 B@6'
+    # Without comment rules the opener lexes as operators and recovery skips
+    # the rest of the file.
+    check_errors tests/recovery/unterminated-comment.cmm 'B@3'
 fi

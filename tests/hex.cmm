@@ -1,0 +1,6 @@
+int main() {
+  int a = 0x1F;
+  int b = 0Xff;
+  int c = 0xFFFFFFFF;
+  return a + b + c;
+}

@@ -2,8 +2,10 @@ CC       = gcc
 AR       ?= ar
 FLEX     ?= flex
 BISON    ?= bison
+AWK      ?= awk
 CFLAGS   ?= -std=gnu11 -g -Wall -Wextra -Wpedantic
 ARFLAGS  = rcs
+FILTER_AWK := feature-filter.awk
 
 include features.mk
 FEATURE_VARS := $(filter FEATURE_%,$(.VARIABLES))
@@ -21,7 +23,8 @@ LEXER_STEM     := $(basename $(notdir $(LEXER_SOURCE)))
 GRAMMAR_C      := $(BUILD)/$(GRAMMAR_STEM).tab.c
 GRAMMAR_H      := $(BUILD)/$(GRAMMAR_STEM).tab.h
 LEXER_C        := $(BUILD)/$(LEXER_STEM).lex.c
-GENERATED      := $(GRAMMAR_C) $(GRAMMAR_H) $(LEXER_C)
+LEXER_FILTERED := $(BUILD)/$(LEXER_STEM).feature.l
+GENERATED      := $(GRAMMAR_C) $(GRAMMAR_H) $(LEXER_C) $(LEXER_FILTERED)
 C_SOURCES      := $(shell find . -type f -name '*.c' -not -path './$(BUILD)/*')
 MAIN_SOURCE    := $(filter %/main.c main.c,$(C_SOURCES))
 MAIN_OBJECT    := $(patsubst ./%.c,$(BUILD)/%.o,$(MAIN_SOURCE))
@@ -34,7 +37,7 @@ DEPFILES       := $(ALL_OBJECTS:.o=.d)
 
 all: parser
 test: $(PARSER)
-	FEATURE_ENABLE_COMMENTS=$(FEATURE_ENABLE_COMMENTS) sh ../tests/run.sh ./$(PARSER)
+	cd .. && $(foreach v,$(FEATURE_VARS),$(v)=$($(v))) sh tests/run.sh Code/$(PARSER)
 
 
 
@@ -59,7 +62,10 @@ $(TARGET): $(LIB_OBJECTS)
 $(GRAMMAR_C) $(GRAMMAR_H) &: $(GRAMMAR_SOURCE) | $(BUILD)
 	$(BISON) $(BISONFLAGS) --defines=$(GRAMMAR_H) -o $(GRAMMAR_C) $<
 
-$(LEXER_C): $(LEXER_SOURCE) $(GRAMMAR_H) | $(BUILD)
+$(LEXER_FILTERED): $(LEXER_SOURCE) $(FILTER_AWK) $(FEATURE_CONFIG) | $(BUILD)
+	$(foreach v,$(FEATURE_VARS),$(v)=$($(v))) $(AWK) -f $(FILTER_AWK) $< > $@
+
+$(LEXER_C): $(LEXER_FILTERED) $(GRAMMAR_H) | $(BUILD)
 	$(FLEX) $(FLEXFLAGS) -o $@ $<
 
 $(GRAMMAR_OBJECT): $(GRAMMAR_C) $(GRAMMAR_H)

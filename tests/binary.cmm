@@ -1,0 +1,5 @@
+int main() {
+  int a = 0b101;
+  int b = 0B11111111;
+  return a + b;
+}

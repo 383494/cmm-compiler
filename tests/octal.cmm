@@ -1,0 +1,6 @@
+int main() {
+  int a = 0123;
+  int b = 0777;
+  int c = 037777777777;
+  return a + b + c;
+}

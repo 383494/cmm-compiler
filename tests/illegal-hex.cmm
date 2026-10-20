@@ -1,0 +1,4 @@
+int main() {
+  int a = 0xG1 + 0xG2;
+  return a;
+}
