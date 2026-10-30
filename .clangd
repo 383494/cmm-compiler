@@ -1,0 +1,8 @@
+# clangd without a compilation database assumes headers are Objective-C++
+# (`clangd --check=Code/ast/ast_defs.h`). A relative -I cannot name the Code/
+# root for every file: clangd resolves it against each source file's own
+# directory, so "." covers files at Code/ and ".." files one level down
+# (Code/ast, Code/utils, Code/build). `make compile_commands.json` gives exact
+# per-file flags instead; the -I entries are then redundant but harmless.
+CompileFlags:
+  Add: [-xc, -std=gnu11, -I., -I..]

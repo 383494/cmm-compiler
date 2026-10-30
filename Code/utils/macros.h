@@ -22,3 +22,22 @@
 #define MUXNDEF(macro, X, Y) MUX_MACRO_PROPERTY(__P_DEF_, macro, Y, X)
 #define MUXONE(macro, X, Y) MUX_MACRO_PROPERTY(__P_ONE_, macro, X, Y)
 #define MUXZERO(macro, X, Y) MUX_MACRO_PROPERTY(__P_ZERO_, macro, X, Y)
+
+// needs gnu C extension
+#define MAX(x, y) ({    \
+	typeof(x) _x = (x); \
+	typeof(y) _y = (y); \
+	_x > _y ? _x : _y;  \
+})
+
+#define CALL(object, method, ...) ({ typeof(object) _obj = (object); _obj->method(_obj,##__VA_ARGS__); })
+
+// call to nullable object, no return value
+#define CALLN(object, method, ...)         \
+	do {                                   \
+		typeof(object) _obj = (object);    \
+		if(_obj == NULL) {                 \
+			break;                         \
+		}                                  \
+		_obj->method(_obj, ##__VA_ARGS__); \
+	} while(0)

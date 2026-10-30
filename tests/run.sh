@@ -21,22 +21,20 @@ check_pass() {
     file=$1
     run "$file"
     [ "$status" -eq 0 ] || fail "expected parse success: $file"
-    grep -q '^Program' "$tmp" || fail "expected AST output: $file"
     grep -q '^Error type ' "$tmp" && fail "expected no diagnostics: $file"
+    [ -s "$tmp" ] && fail "expected no output: $file"
     printf 'PASS: %s\n' "$file"
 }
 
 # Asserts the exact "type@line" sequence of diagnostics, that at most one
-# diagnostic is reported per line, that diagnostics never accompany an AST,
-# that type B carries the syntax-error message, and that type A carries a
-# non-empty description.
+# diagnostic is reported per line, and that type B carries the syntax-error
+# message while type A carries a non-empty description.
 check_errors() {
     file=$1
     expected=$2
     run "$file"
     [ "$status" -le 1 ] || fail "unexpected exit status $status: $file"
     grep -q '^Error type ' "$tmp" || fail "expected diagnostics: $file"
-    grep -q '^Program' "$tmp" && fail "expected diagnostics without an AST: $file"
 
     actual=$(awk '/^Error type / { printf "%s%s@%d", separator, substr($3, 1, 1), $6; separator = " " }' "$tmp")
     [ "$actual" = "$expected" ] || fail "expected diagnostics [$expected] from $file, got [$actual]"
@@ -63,19 +61,6 @@ check_message() {
     printf 'PASS: %s (message: %s)\n' "$file" "$pattern"
 }
 
-# Asserts that valid input yields the expected AST nodes and no diagnostics.
-check_ast_contains() {
-    file=$1
-    shift
-    run "$file"
-    [ "$status" -eq 0 ] || fail "expected parse success: $file"
-    grep -q '^Error type ' "$tmp" && fail "expected no diagnostics: $file"
-    for node in "$@"; do
-        grep -q "^ *$node\b" "$tmp" || fail "expected AST node $node in $file"
-    done
-    printf 'PASS: %s (AST nodes: %s)\n' "$file" "$*"
-}
-
 check_pass tests/pass0.cmm
 check_pass tests/pass1.cmm
 if [ "${FEATURE_ENABLE_OCTAL:-1}" = 1 ] && [ "${FEATURE_ENABLE_HEXADECIMAL:-1}" = 1 ]; then
@@ -88,24 +73,20 @@ else
 fi
 if [ "${FEATURE_ENABLE_OCTAL:-1}" = 1 ]; then
     check_pass tests/octal.cmm
-    check_ast_contains tests/octal.cmm 'INT: 83' 'INT: 511' 'INT: 4294967295'
 else
     # Without octal literals '0123' is a 0 followed by a decimal 123.
     check_errors tests/octal.cmm 'B@2 B@3 B@4'
 fi
 if [ "${FEATURE_ENABLE_HEXADECIMAL:-1}" = 1 ]; then
     check_pass tests/hex.cmm
-    check_ast_contains tests/hex.cmm 'INT: 31' 'INT: 255' 'INT: 4294967295'
 else
     # Without hexadecimal literals '0x1F' is a 0 followed by an identifier.
     check_errors tests/hex.cmm 'B@2 B@3 B@4'
 fi
 check_pass tests/pass4.cmm
-check_ast_contains tests/pass4.cmm CompSt StructSpecifier FunDec WHILE IF ELSE RETURN LB DOT NOT AND RELOP VarList ParamDec Args
-check_ast_contains tests/pass5.cmm CompSt StructSpecifier FunDec WHILE IF ELSE RETURN LB DOT NOT MINUS RELOP OR Args
+check_pass tests/pass5.cmm
 if [ "${FEATURE_ENABLE_BINARY:-1}" = 1 ]; then
     check_pass tests/binary.cmm
-    check_ast_contains tests/binary.cmm 'INT: 5' 'INT: 255'
 else
     # Without binary literals '0b101' is an octal 0 followed by an identifier.
     check_errors tests/binary.cmm 'B@2 B@3'
