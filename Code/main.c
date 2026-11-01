@@ -1,4 +1,5 @@
 #include "ast/ast_defs.h"
+#include "ast/semantic.h"
 #include "utils/macros.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +29,10 @@ int main(int argc, char **argv) {
 	int parse_status = yyparse(&ast);
 	fclose(yyin);
 	yylex_destroy();
+
+	if(parse_status == 0 && cmm_error_count == 0) {
+		semantic_check((Program *)ast);
+	}
 
 	free_ast(ast);
 	if(parse_status != 0 || cmm_error_count != 0) {

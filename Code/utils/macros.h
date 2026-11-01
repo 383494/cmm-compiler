@@ -32,12 +32,12 @@
 
 #define CALL(object, method, ...) ({ typeof(object) _obj = (object); _obj->method(_obj,##__VA_ARGS__); })
 
-// call to nullable object, no return value
-#define CALLN(object, method, ...)         \
-	do {                                   \
-		typeof(object) _obj = (object);    \
-		if(_obj == NULL) {                 \
-			break;                         \
-		}                                  \
-		_obj->method(_obj, ##__VA_ARGS__); \
+// call to nullable object or method, no return value
+#define CALLN(object, method, ...)                 \
+	do {                                           \
+		typeof(object) _obj = (object);            \
+		if(_obj == NULL || _obj->method == NULL) { \
+			break;                                 \
+		}                                          \
+		_obj->method(_obj, ##__VA_ARGS__);         \
 	} while(0)

@@ -1,4 +1,5 @@
 #include "ast_defs.h"
+#include "ast_ops.h"
 #include <stdlib.h>
 
 static void BaseAST_init(void* buf, int lineno, void (*free_node)(void*)) {
@@ -13,8 +14,7 @@ void free_ast(void* node) {
 
 // converting DEQUE_T(T*) to DEQUE_T(BaseAST*) is strict-aliasing UB, but it just works
 void free_ast_list(void* list) {
-	DEQUE_T(BaseAST*)
-	items = list;
+	DEQUE_T(BaseAST*) items = list;
 	if(items == NULL) return;
 	dq_foreach(items, i) {
 		free_ast(dq_at(items, i));
@@ -138,6 +138,7 @@ SpecDef* SpecDef_init(void* buf, int lineno, BaseSpecifier* spec) {
 	SpecDef* this = buf;
 	BaseAST_init(this, lineno, SpecDef_free);
 	this->super.spec = spec;
+	this->super.ops = &sem_spec_def_ops;
 	return this;
 }
 
@@ -146,6 +147,7 @@ VarInitDefs* VarInitDefs_init(void* buf, int lineno, BaseSpecifier* spec,
 	VarInitDefs* this = buf;
 	BaseAST_init(this, lineno, VarInitDefs_free);
 	this->super.spec = spec;
+	this->super.ops = &sem_var_init_defs_ops;
 	this->var_decs = var_decs;
 	return this;
 }
@@ -165,6 +167,7 @@ FunDec* FunDec_init(void* buf, int lineno, BaseSpecifier* spec, char* name,
 	FunDec* this = buf;
 	BaseAST_init(this, lineno, FunDec_free);
 	this->super.spec = spec;
+	this->super.ops = &sem_fun_dec_ops;
 	this->name = name;
 	this->params = params;
 	this->opt_body = opt_body;
@@ -174,6 +177,7 @@ FunDec* FunDec_init(void* buf, int lineno, BaseSpecifier* spec, char* name,
 TypeSpecifier* TypeSpecifier_init(void* buf, int lineno, char* type) {
 	TypeSpecifier* this = buf;
 	BaseAST_init(this, lineno, TypeSpecifier_free);
+	this->super.ops = &sem_type_specifier_ops;
 	this->type = type;
 	return this;
 }
@@ -181,6 +185,7 @@ TypeSpecifier* TypeSpecifier_init(void* buf, int lineno, char* type) {
 StructDeclSpecifier* StructDeclSpecifier_init(void* buf, int lineno, char* tag) {
 	StructDeclSpecifier* this = buf;
 	BaseAST_init(this, lineno, StructDeclSpecifier_free);
+	this->super.ops = &sem_struct_decl_specifier_ops;
 	this->tag = tag;
 	return this;
 }
@@ -189,6 +194,7 @@ StructDefSpecifier* StructDefSpecifier_init(void* buf, int lineno, char* opt_tag
 											DEQUE_T(BaseDef*) defs) {
 	StructDefSpecifier* this = buf;
 	BaseAST_init(this, lineno, StructDefSpecifier_free);
+	this->super.ops = &sem_struct_def_specifier_ops;
 	this->opt_tag = opt_tag;
 	this->defs = defs;
 	return this;
@@ -206,6 +212,7 @@ ParamDec* ParamDec_init(void* buf, int lineno, BaseSpecifier* spec,
 ExpStmt* ExpStmt_init(void* buf, int lineno, Exp* exp) {
 	ExpStmt* this = buf;
 	BaseAST_init(this, lineno, ExpStmt_free);
+	this->super.ops = &sem_exp_stmt_ops;
 	this->exp = exp;
 	return this;
 }
@@ -213,6 +220,7 @@ ExpStmt* ExpStmt_init(void* buf, int lineno, Exp* exp) {
 ReturnStmt* ReturnStmt_init(void* buf, int lineno, Exp* exp) {
 	ReturnStmt* this = buf;
 	BaseAST_init(this, lineno, ReturnStmt_free);
+	this->super.ops = &sem_return_stmt_ops;
 	this->exp = exp;
 	return this;
 }
@@ -221,6 +229,7 @@ CompSt* CompSt_init(void* buf, int lineno, DEQUE_T(BaseDef*) defs,
 					DEQUE_T(BaseStmt*) stmts) {
 	CompSt* this = buf;
 	BaseAST_init(this, lineno, CompSt_free);
+	this->super.ops = &sem_comp_st_ops;
 	this->defs = defs;
 	this->stmts = stmts;
 	return this;
@@ -230,6 +239,7 @@ IfStmt* IfStmt_init(void* buf, int lineno, Exp* cond, BaseStmt* then,
 					BaseStmt* opt_else) {
 	IfStmt* this = buf;
 	BaseAST_init(this, lineno, IfStmt_free);
+	this->super.ops = &sem_if_stmt_ops;
 	this->cond = cond;
 	this->then = then;
 	this->opt_else = opt_else;
@@ -239,6 +249,7 @@ IfStmt* IfStmt_init(void* buf, int lineno, Exp* cond, BaseStmt* then,
 WhileStmt* WhileStmt_init(void* buf, int lineno, Exp* cond, BaseStmt* body) {
 	WhileStmt* this = buf;
 	BaseAST_init(this, lineno, WhileStmt_free);
+	this->super.ops = &sem_while_stmt_ops;
 	this->cond = cond;
 	this->body = body;
 	return this;
@@ -248,5 +259,6 @@ Exp* Exp_init(void* buf, int lineno, ExpKind kind) {
 	Exp* this = buf;
 	BaseAST_init(this, lineno, Exp_free);
 	this->kind = kind;
+	this->ops = sem_exp_ops_for_kind(kind);
 	return this;
 }

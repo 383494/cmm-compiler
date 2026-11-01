@@ -1,5 +1,5 @@
 # Preprocesses /*@if EXPR@*/ ... /*@else@*/ ... /*@endif@*/ blocks before
-# flex runs. EXPR is a boolean expression over FEATURE_* variables using
+# flex or bison runs. EXPR is a boolean expression over FEATURE_* variables using
 # !, &&, ||, and parentheses; a bare name means "feature is enabled". The
 # first branch is emitted when EXPR is true, the @else branch otherwise.
 # Marker lines are always removed, so a disabled branch contributes no

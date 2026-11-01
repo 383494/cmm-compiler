@@ -20,11 +20,12 @@ GRAMMAR_SOURCE := $(firstword $(shell find . -type f -name '*.y' -not -path './$
 LEXER_SOURCE   := $(firstword $(shell find . -type f -name '*.l' -not -path './$(BUILD)/*'))
 GRAMMAR_STEM   := $(basename $(notdir $(GRAMMAR_SOURCE)))
 LEXER_STEM     := $(basename $(notdir $(LEXER_SOURCE)))
-GRAMMAR_C      := $(BUILD)/$(GRAMMAR_STEM).tab.c
-GRAMMAR_H      := $(BUILD)/$(GRAMMAR_STEM).tab.h
-LEXER_C        := $(BUILD)/$(LEXER_STEM).lex.c
-LEXER_FILTERED := $(BUILD)/$(LEXER_STEM).feature.l
-GENERATED      := $(GRAMMAR_C) $(GRAMMAR_H) $(LEXER_C) $(LEXER_FILTERED)
+GRAMMAR_C        := $(BUILD)/$(GRAMMAR_STEM).tab.c
+GRAMMAR_H        := $(BUILD)/$(GRAMMAR_STEM).tab.h
+GRAMMAR_FILTERED := $(BUILD)/$(GRAMMAR_STEM).feature.y
+LEXER_C          := $(BUILD)/$(LEXER_STEM).lex.c
+LEXER_FILTERED   := $(BUILD)/$(LEXER_STEM).feature.l
+GENERATED        := $(GRAMMAR_C) $(GRAMMAR_H) $(GRAMMAR_FILTERED) $(LEXER_C) $(LEXER_FILTERED)
 C_SOURCES      := $(shell find . -type f -name '*.c' -not -path './$(BUILD)/*')
 MAIN_SOURCE    := $(filter %/main.c main.c,$(C_SOURCES))
 MAIN_OBJECT    := $(patsubst ./%.c,$(BUILD)/%.o,$(MAIN_SOURCE))
@@ -61,7 +62,10 @@ $(PARSER): $(MAIN_OBJECT) $(TARGET)
 $(TARGET): $(LIB_OBJECTS)
 	$(AR) $(ARFLAGS) $@ $^
 
-$(GRAMMAR_C) $(GRAMMAR_H) &: $(GRAMMAR_SOURCE) | $(BUILD)
+$(GRAMMAR_FILTERED): $(GRAMMAR_SOURCE) $(FILTER_AWK) $(FEATURE_CONFIG) | $(BUILD)
+	$(foreach v,$(FEATURE_VARS),$(v)=$($(v))) $(AWK) -f $(FILTER_AWK) $< > $@
+
+$(GRAMMAR_C) $(GRAMMAR_H) &: $(GRAMMAR_FILTERED) | $(BUILD)
 	$(BISON) $(BISONFLAGS) --defines=$(GRAMMAR_H) -o $(GRAMMAR_C) $<
 
 $(LEXER_FILTERED): $(LEXER_SOURCE) $(FILTER_AWK) $(FEATURE_CONFIG) | $(BUILD)

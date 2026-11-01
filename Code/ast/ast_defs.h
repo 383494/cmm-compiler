@@ -1,9 +1,9 @@
 #pragma once
-#include "../utils/common.h"
+#include "utils/common.h"
 
 typedef struct BaseAST {
 	int lineno;
-	void (*free)(void*);   // recursively free this and its children
+	void (*free)(void* this);   // recursively free this and its children
 } BaseAST;
 
 #define DEF_AST(parent, name, ...) \
@@ -15,54 +15,63 @@ typedef struct BaseAST {
 #define DECL_AST(parent, name, ...) \
 	typedef struct name name;
 
-// TODO: add virtual function to visit BaseAST
+typedef struct DefOps DefOps;
+typedef struct SpecOps SpecOps;
+typedef struct StmtOps StmtOps;
+typedef struct ExpOps ExpOps;
+
+#define EXP_KINDS(_) \
+	_(ID)            \
+	_(INT)           \
+	_(FLOAT)         \
+	_(ASSIGN)        \
+	_(AND)           \
+	_(OR)            \
+	_(ADD)           \
+	_(SUB)           \
+	_(MUL)           \
+	_(DIV)           \
+	_(NEG)           \
+	_(NOT)           \
+	_(CALL_EXPR)     \
+	_(SUBSCRIPT)     \
+	_(MEMBER)        \
+	_(EQ)            \
+	_(NE)            \
+	_(LT)            \
+	_(LE)            \
+	_(GT)            \
+	_(GE)
+
+typedef enum {
+#define EXP_ENUM(name) EXP_##name,
+	APPLY(EXP_ENUM, EXP_KINDS)
+#undef EXP_ENUM
+} ExpKind;
+
 #define ASTs(_)                                                                   \
 	_(BaseAST, Program, DEQUE_T(BaseDef*) ext_defs;)                              \
-	_(BaseAST, BaseDef, BaseSpecifier* spec;)                                     \
+	_(BaseAST, BaseDef, BaseSpecifier* spec; const DefOps* ops;)                  \
 	_(BaseDef, SpecDef, ;)                                                        \
 	_(BaseDef, VarInitDefs, DEQUE_T(UntypedVarDef*) var_decs;)                    \
 	_(BaseAST, UntypedVarDef, char* name; DEQUE_T(int) dims; Exp * opt_init;)     \
 	_(BaseDef, FunDec, char* name; DEQUE_T(ParamDec*) params; CompSt * opt_body;) \
-	_(BaseAST, BaseSpecifier, ;)                                                  \
+	_(BaseAST, BaseSpecifier, const SpecOps* ops;)                                \
 	_(BaseSpecifier, TypeSpecifier, char* type;)                                  \
 	_(BaseSpecifier, StructDeclSpecifier, char* tag;)                             \
 	_(BaseSpecifier, StructDefSpecifier, char* opt_tag; DEQUE_T(BaseDef*) defs;)  \
 	_(BaseAST, ParamDec, BaseSpecifier* spec; UntypedVarDef * var_dec;)           \
-	_(BaseAST, BaseStmt, ;)                                                       \
+	_(BaseAST, BaseStmt, const StmtOps* ops;)                                     \
 	_(BaseStmt, ExpStmt, Exp* exp;)                                               \
 	_(BaseStmt, ReturnStmt, Exp* exp;)                                            \
 	_(BaseStmt, CompSt, DEQUE_T(BaseDef*) defs; DEQUE_T(BaseStmt*) stmts;)        \
 	_(BaseStmt, IfStmt, Exp* cond; BaseStmt * then; BaseStmt * opt_else;)         \
 	_(BaseStmt, WhileStmt, Exp* cond; BaseStmt * body;)                           \
-	_(BaseAST, Exp, ExpKind kind; char* name; int int_val;                        \
+	_(BaseAST, Exp, ExpKind kind; const ExpOps* ops; char* name; int int_val;     \
 	  float float_val;                                                            \
 	  Exp * lhs;                                                                  \
 	  Exp * rhs;                                                                  \
 	  DEQUE_T(Exp*) args;)
-
-typedef enum {
-	EXP_ID,
-	EXP_INT,
-	EXP_FLOAT,
-	EXP_ASSIGN,
-	EXP_AND,
-	EXP_OR,
-	EXP_ADD,
-	EXP_SUB,
-	EXP_MUL,
-	EXP_DIV,
-	EXP_NEG,
-	EXP_NOT,
-	EXP_CALL,
-	EXP_SUBSCRIPT,
-	EXP_MEMBER,
-	EXP_EQ,
-	EXP_NE,
-	EXP_LT,
-	EXP_LE,
-	EXP_GT,
-	EXP_GE,
-} ExpKind;
 
 APPLY(DECL_AST, ASTs)
 APPLY(DEF_AST, ASTs)

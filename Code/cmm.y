@@ -191,6 +191,19 @@ ExtDef:
         // struct { ... };
         $$ = (BaseDef *)NEW(SpecDef, @$.first_line, $1);
     }
+/*@if FEATURE_ENABLE_FUNCTION_DECLARATIONS@*/
+    | Specifier FunDec SEMI {
+        FunDec *this = $2;
+        if (this == NULL) {
+            free_ast($1);
+        } else {
+            this->super.spec = $1;
+            this->opt_body = NULL;
+            ((BaseAST *)this)->lineno = @$.first_line;
+        }
+        $$ = (BaseDef *)this;
+    }
+/*@endif@*/
     | Specifier FunDec CompSt {
         FunDec *this = $2;
         if (this == NULL) {
@@ -505,13 +518,13 @@ Exp:
         $$ = unary_exp(@$.first_line, EXP_NOT, $2);
     }
     | ID LP Args RP {
-        Exp *this = NEW(Exp, @$.first_line, EXP_CALL);
+        Exp *this = NEW(Exp, @$.first_line, EXP_CALL_EXPR);
         this->name = $1;
         this->args = $3;
         $$ = this;
     }
     | ID LP RP {
-        Exp *this = NEW(Exp, @$.first_line, EXP_CALL);
+        Exp *this = NEW(Exp, @$.first_line, EXP_CALL_EXPR);
         this->name = $1;
         $$ = this;
     }
