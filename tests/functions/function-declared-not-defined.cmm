@@ -1,0 +1,6 @@
+int missing(int a);
+int main() {
+  return 0;
+}
+// @expect[FUNCTION_DECLARATIONS=1] fail 18@1
+// @expect[FUNCTION_DECLARATIONS=0] fail B@1

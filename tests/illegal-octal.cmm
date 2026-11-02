@@ -1,4 +1,0 @@
-int main() {
-  int a = 09 + 08;
-  return a;
-}

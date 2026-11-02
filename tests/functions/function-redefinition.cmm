@@ -1,0 +1,4 @@
+int f(int a) { return a; }
+int f(int a) { return a; }
+int main() { return f(1); }
+// @expect fail 4@2

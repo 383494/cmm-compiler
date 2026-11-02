@@ -1,0 +1,7 @@
+int f(int x[2][3]) { return x[0][0]; }
+int main() {
+  int c[6];
+  c[0] = 1;
+  return f(c);
+}
+// @expect fail 9@5

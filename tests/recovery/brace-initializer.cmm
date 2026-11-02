@@ -5,3 +5,4 @@ int main() {
   s.id = 1;
   return total;
 }
+// @expect fail B@3

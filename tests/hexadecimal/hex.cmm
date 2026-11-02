@@ -4,3 +4,5 @@ int main() {
   int c = 0xFFFFFFFF;
   return a + b + c;
 }
+// @expect[HEXADECIMAL=1] pass
+// @expect[HEXADECIMAL=0] fail B@2 B@3 B@4

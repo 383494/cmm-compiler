@@ -14,3 +14,4 @@ int length() {
   l.end.x = ;
   return 0;
 }
+// @expect fail B@14

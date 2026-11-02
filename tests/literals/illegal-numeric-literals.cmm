@@ -1,0 +1,10 @@
+int main() 
+{ 
+  int i = 09; 
+  int j = 0x3G; 
+} 
+
+int i = 0.5e4;
+// @expect[OCTAL=1 HEXADECIMAL=1] fail A@3 A@4 B@7
+// @expect[OCTAL=1 HEXADECIMAL=0] fail A@3 B@4 B@7
+// @expect[OCTAL=0] fail B@3 B@4 B@7

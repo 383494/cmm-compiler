@@ -1,6 +1,7 @@
 MAKE	?= make
 TYPST	?= typst
 ZIP		?= zip
+GIT		?= git
 
 .PHONY: all zip
 
@@ -10,4 +11,7 @@ all:
 zip:
 	$(MAKE) -C Code clean
 	$(TYPST) compile docs/report.typ report.pdf
-	$(ZIP) output.zip -r README.md report.pdf Code/
+	rm -f output.zip
+	$(GIT) ls-files -z --cached --others --exclude-standard -- Code README.md | \
+		xargs -0 $(ZIP) output.zip
+	$(ZIP) output.zip report.pdf

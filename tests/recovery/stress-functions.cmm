@@ -14,3 +14,4 @@ int broken() {
 int f5() { return 5; }
 int f6() { return 6; }
 int main() { return f0() + f1() + f2() + f3() + f4() + f5() + f6(); }
+// @expect fail B@10

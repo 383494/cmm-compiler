@@ -2,3 +2,4 @@ int main() {
   int x = f,1,);
   return x;
 }
+// @expect fail B@2

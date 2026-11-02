@@ -1,0 +1,6 @@
+int main() {
+  int a = 09 + 08;
+  return a;
+}
+// @expect[OCTAL=1] fail A@2
+// @expect[OCTAL=0] fail B@2

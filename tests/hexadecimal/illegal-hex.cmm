@@ -1,0 +1,6 @@
+int main() {
+  int a = 0xG1 + 0xG2;
+  return a;
+}
+// @expect[HEXADECIMAL=1] fail A@2
+// @expect[HEXADECIMAL=0] fail B@2

@@ -1,0 +1,8 @@
+struct { int a; float b; } x;
+struct { int b; float c; } y;
+int main() {
+  x = y;
+  return 0;
+}
+// @expect[STRUCTURAL_STRUCTS=1] pass
+// @expect[STRUCTURAL_STRUCTS=0] fail 5@4

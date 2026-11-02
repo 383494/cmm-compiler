@@ -1,0 +1,8 @@
+int f(int a);
+int f(float a);
+int f(int a) { return a; }
+int g(int b);
+float g(int b) { return 1.0; }
+int main() { return 0; }
+// @expect[FUNCTION_DECLARATIONS=1] fail 19@2 19@5
+// @expect[FUNCTION_DECLARATIONS=0] fail B@1 B@2 B@4

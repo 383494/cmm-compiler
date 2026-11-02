@@ -3,3 +3,4 @@ int main() {
       b[2.5];
   return 0;
 }
+// @expect fail B@2 B@3

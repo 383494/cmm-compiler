@@ -3,3 +3,4 @@ int main() {
   int step = base $ 3;
   return step;
 }
+// @expect fail A@3

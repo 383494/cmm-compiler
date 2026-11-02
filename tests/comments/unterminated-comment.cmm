@@ -1,0 +1,7 @@
+int main() {
+  int i = 1;
+  /* unterminated
+  return i;
+}
+// @expect[COMMENTS=1] fail A@3
+// @expect[COMMENTS=0] fail B@3

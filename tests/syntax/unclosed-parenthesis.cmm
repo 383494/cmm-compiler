@@ -1,6 +1,6 @@
 int main() {
   int value;
-  value = 1 + ;
-  value = 2 + ;
+  value = (1 + 2;
   return value;
 }
+// @expect fail B@3

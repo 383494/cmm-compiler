@@ -3,3 +3,4 @@ int process(int mode,) {
   x = x + 1;
   return x;
 }
+// @expect fail B@1

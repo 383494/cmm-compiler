@@ -33,3 +33,4 @@ int main() {
   }
   return local[0];
 }
+// @expect pass

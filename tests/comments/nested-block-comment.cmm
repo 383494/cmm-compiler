@@ -8,3 +8,5 @@ int main()
   */ 
   int i = 1; 
  }
+// @expect[COMMENTS=1] fail B@8
+// @expect[COMMENTS=0] fail B@3

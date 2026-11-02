@@ -1,0 +1,9 @@
+int add(int a, int b);
+int add(int a, int b) {
+  return a + b;
+}
+int main() {
+  return add(1, 2);
+}
+// @expect[FUNCTION_DECLARATIONS=1] pass
+// @expect[FUNCTION_DECLARATIONS=0] fail B@1

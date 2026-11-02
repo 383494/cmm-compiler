@@ -3,3 +3,4 @@ int main() {
   return i;
 }
 }
+// @expect fail B@5

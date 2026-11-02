@@ -5,3 +5,4 @@ int first() {
 int second() {
   return ;
 }
+// @expect fail B@4 B@6

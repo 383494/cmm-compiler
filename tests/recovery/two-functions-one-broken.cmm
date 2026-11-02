@@ -12,3 +12,4 @@ int broken(int n) {
 int third(int n) {
   return n + 1;
 }
+// @expect fail B@8

@@ -3,3 +3,4 @@ struct S {
   1 + 2;
 };
 int main() { return 0; }
+// @expect fail B@3

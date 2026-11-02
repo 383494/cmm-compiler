@@ -1,0 +1,179 @@
+# Clang-Format options reference
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+Language: Cpp
+BasedOnStyle: LLVM
+
+# Access specifier indentation
+AccessModifierOffset: -4
+
+# Alignment after opening brackets
+AlignAfterOpenBracket: Align
+
+# Do not align consecutive assignments or declarations
+#AlignConsecutiveMacros: None
+# Controls alignment of consecutive macro definitions
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+
+# Escaped newline alignment
+AlignEscapedNewlines: Left
+
+# Operand alignment for binary/ternary expressions
+AlignOperands: Align
+
+# Align trailing comments
+AlignTrailingComments: true
+
+# Allow breaking arguments/parameters onto next lines
+AllowAllArgumentsOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# Short constructs on a single line
+#AllowShortEnumsOnASingleLine: true
+# Allows short enum definitions to stay on one line
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLoopsOnASingleLine: true
+
+# Return type line breaks
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+
+# String and template breaking
+#BreakStringLiterals: false
+# Prevents breaking long string literals
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: MultiLine
+
+# Argument and parameter packing
+BinPackArguments: false
+BinPackParameters: true
+
+# Brace wrapping (Custom only)
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Never
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: false
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# Operator and brace breaking
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: true
+
+# Constructor initializer formatting
+#SpaceBeforeCtorInitializerColon: true
+# Inserts space before constructor initializer colon
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 4
+
+# Line length (0 = unlimited)
+ColumnLimit: 0
+
+# Namespace formatting
+#IncludeIsMainRegex: '(Test)?$'
+# Helps identify the main header for include sorting
+CompactNamespaces: false
+NamespaceIndentation: None
+FixNamespaceComments: true
+
+# Indentation
+ContinuationIndentWidth: 4
+IndentCaseLabels: false
+IndentPPDirectives: AfterHash
+IndentWidth: 4
+IndentWrappedFunctionNames: false
+
+# C++ specifics
+Cpp11BracedListStyle: true
+DerivePointerAlignment: true
+PointerAlignment: Left
+Standard: c++20
+
+# Formatting control
+DisableFormat: false
+ExperimentalAutoDetectBinPacking: false
+ReflowComments: true
+
+# Macros
+ForEachMacros: [ foreach, Q_FOREACH, BOOST_FOREACH ]
+MacroBlockBegin: ''
+MacroBlockEnd: ''
+
+# Includes sorting
+IncludeCategories:
+  - Regex: '^"(llvm|llvm-c|clang|clang-c)/'
+    Priority: 2
+  - Regex: '^(<|"(gtest|isl|json)/)'
+    Priority: 3
+  - Regex: '.*'
+    Priority: 1
+SortIncludes: CaseSensitive
+SortUsingDeclarations: false
+
+# Objective-C spacing
+#ObjCBinPackProtocolList: Auto
+# Packing behavior for Objective-C protocol lists
+ObjCBlockIndentWidth: 4
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: true
+
+# Penalties
+PenaltyBreakBeforeFirstCallParameter: 2
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 120
+
+# Spacing rules
+# SpacesInLineCommentPrefix:
+#   Minimum: 1
+#   Maximum: 1
+# Controls spacing after // in line comments
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: false
+SpaceAroundPointerQualifiers: After
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: Never
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 3
+SpacesInAngles: Leave
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# Tabs
+TabWidth: 4
+UseTab: ForContinuationAndIndentation
+
+# Empty lines
+KeepEmptyLinesAtTheStartOfBlocks: true
+MaxEmptyLinesToKeep: 10
+
+# Pointer-typedef macros. Without this clang-format parses
+# "DEQUE_T(T*) x;" as two statements and splits it after the macro.
+TypenameMacros: [DEQUE_T, STRMAP_T]

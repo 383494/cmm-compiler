@@ -1,0 +1,8 @@
+int f(int x[2][3]) { return x[0][0]; }
+int main() {
+  int b[4][5];
+  b[0][0] = 1;
+  return f(b);
+}
+// @expect[COMPARE_ARRAY_SIZE=1] fail 9@5
+// @expect[COMPARE_ARRAY_SIZE=0] pass

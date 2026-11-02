@@ -18,3 +18,4 @@ int b() {
 int c() {
   return 42;
 }
+// @expect fail B@12

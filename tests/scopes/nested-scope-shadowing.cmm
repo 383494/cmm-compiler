@@ -28,3 +28,5 @@ int main() {
     pair.left = 0;
   return pair.left;
 }
+// @expect[NESTED_SCOPES=1] pass
+// @expect[NESTED_SCOPES=0] fail 3@18

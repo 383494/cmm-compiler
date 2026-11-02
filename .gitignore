@@ -1,12 +1,13 @@
 
 .direnv/
 shell.nix
+flake.nix
 .envrc
 **/.cache
 
 report.pdf
 output.zip
 docs/
-Code/build/
-Code/parser
-Code/compile_commands.json
+**/build/
+**/parser
+**/compile_commands.json

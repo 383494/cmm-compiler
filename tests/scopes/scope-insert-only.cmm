@@ -1,0 +1,10 @@
+int main() {
+  {
+    int x;
+    x = 1;
+  }
+  x = 2;
+  return 0;
+}
+// @expect[NESTED_SCOPES=1] fail 1@6
+// @expect[NESTED_SCOPES=0] pass

@@ -4,3 +4,5 @@ int main() {
   int c = 037777777777;
   return a + b + c;
 }
+// @expect[OCTAL=1] pass
+// @expect[OCTAL=0] fail B@2 B@3 B@4

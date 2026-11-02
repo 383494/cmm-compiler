@@ -5,3 +5,4 @@ int main() {
       a[3,4];
   return 0;
 }
+// @expect fail B@4 B@5

@@ -1,0 +1,7 @@
+struct { int a; } x;
+struct { float b; } y;
+int main() {
+  x = y;
+  return 0;
+}
+// @expect fail 5@4
